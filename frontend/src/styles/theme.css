@@ -1,0 +1,25 @@
+:root{
+
+--primary:#2563EB;
+
+--secondary:#3B82F6;
+
+--dark:#020617;
+
+--card:#111827;
+
+--white:#F8FAFC;
+
+--gray:#CBD5E1;
+
+--success:#10B981;
+
+--warning:#F59E0B;
+
+--danger:#EF4444;
+
+--radius:16px;
+
+--shadow:0 10px 30px rgba(0,0,0,.3);
+
+}

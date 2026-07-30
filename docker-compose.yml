@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sqlshield-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - sqlshield-network
+
+  backend:
+
+    build:
+      context: ./backend
+
+    container_name: sqlshield-backend
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    expose:
+      - "5000"
+
+    networks:
+      - sqlshield-network
+
+  frontend:
+
+    build:
+      context: ./frontend
+
+    container_name: sqlshield-frontend
+    restart: unless-stopped
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+    depends_on:
+      - backend
+
+    networks:
+      - sqlshield-network
+
+  nginx:
+
+    build:
+      context: ./nginx
+
+    container_name: sqlshield-nginx
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      - frontend
+      - backend
+
+    networks:
+      - sqlshield-network
+
+volumes:
+  postgres_data:
+
+networks:
+  sqlshield-network:
