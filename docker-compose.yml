@@ -1,10 +1,9 @@
-version: "3.9"
-
 services:
 
   postgres:
     image: postgres:16-alpine
     container_name: sqlshield-postgres
+
     restart: unless-stopped
 
     environment:
@@ -14,13 +13,7 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
 
     networks:
       - sqlshield-network
@@ -31,21 +24,14 @@ services:
       context: ./backend
 
     container_name: sqlshield-backend
+
     restart: unless-stopped
 
     env_file:
       - .env
 
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-
     depends_on:
-      postgres:
-        condition: service_healthy
-
-    expose:
-      - "5000"
+      - postgres
 
     networks:
       - sqlshield-network
@@ -56,11 +42,8 @@ services:
       context: ./frontend
 
     container_name: sqlshield-frontend
-    restart: unless-stopped
 
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    restart: unless-stopped
 
     depends_on:
       - backend
@@ -74,6 +57,7 @@ services:
       context: ./nginx
 
     container_name: sqlshield-nginx
+
     restart: unless-stopped
 
     ports:
