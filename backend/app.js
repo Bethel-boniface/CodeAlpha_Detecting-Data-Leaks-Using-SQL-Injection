@@ -25,30 +25,29 @@ const app = express();
 
 /*
 |--------------------------------------------------------------------------
+| Trust Reverse Proxy (Nginx)
+|--------------------------------------------------------------------------
+*/
+
+app.set("trust proxy", 1);
+
+/*
+|--------------------------------------------------------------------------
 | Security
 |--------------------------------------------------------------------------
 */
 
 app.use(
-
     helmet({
-
         crossOriginResourcePolicy: false
-
     })
-
 );
 
 app.use(
-
     cors({
-
         origin: "*",
-
         credentials: true
-
     })
-
 );
 
 /*
@@ -58,23 +57,15 @@ app.use(
 */
 
 app.use(
-
     express.json({
-
         limit: "10mb"
-
     })
-
 );
 
 app.use(
-
     express.urlencoded({
-
         extended: true
-
     })
-
 );
 
 /*
@@ -95,103 +86,48 @@ app.use(rateLimiter);
 
 /*
 |--------------------------------------------------------------------------
-| SQLShield Detection Engine
+| SQL Injection Detection
 |--------------------------------------------------------------------------
-|
-| Every request is inspected except the Playground endpoint,
-| because it intentionally receives malicious SQL payloads.
-|
 */
 
 app.use((req, res, next) => {
 
-    if (
-
-        req.originalUrl.startsWith(
-
-            "/api/v1/security/analyze"
-
-        )
-
-    ) {
-
+    if (req.originalUrl.startsWith("/api/v1/security/analyze")) {
         return next();
-
     }
 
-    return sqlInjectionDetector(
-
-        req,
-
-        res,
-
-        next
-
-    );
+    return sqlInjectionDetector(req, res, next);
 
 });
 
 /*
 |--------------------------------------------------------------------------
-| Root Endpoint
+| Root
 |--------------------------------------------------------------------------
 */
 
 app.get("/", (req, res) => {
 
-    return res.status(200).json({
-
+    return res.json({
         success: true,
-
         application: "SQLShield",
-
         version: "1.0.0",
-
         status: "Running",
-
         timestamp: new Date()
-
     });
 
 });
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| Routes
 |--------------------------------------------------------------------------
 */
 
-app.use(
-
-    "/api/v1/health",
-
-    healthRoutes
-
-);
-
-app.use(
-
-    "/api/v1/auth",
-
-    authRoutes
-
-);
-
-app.use(
-
-    "/api/v1/admin",
-
-    adminRoutes
-
-);
-
-app.use(
-
-    "/api/v1/security",
-
-    securityRoutes
-
-);
+app.use("/api/v1/health", healthRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/security", securityRoutes);
 
 /*
 |--------------------------------------------------------------------------
