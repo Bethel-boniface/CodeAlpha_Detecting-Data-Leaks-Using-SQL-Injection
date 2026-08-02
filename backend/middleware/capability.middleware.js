@@ -1,41 +1,26 @@
-const CapabilityService =
-require("../services/capability.service");
+const CapabilityService = require("../services/capability.service");
 
-module.exports =
-(requiredCapability) => {
+module.exports = (requiredCapability) => {
 
-    return async (
+    return async (req, res, next) => {
 
-        req,
+        console.log("\n========== CAPABILITY MIDDLEWARE ==========");
+        console.log("User:", req.user);
+        console.log("Required:", requiredCapability);
 
-        res,
+        const allowed = await CapabilityService.hasCapability(
+            req.user.role,
+            requiredCapability
+        );
 
-        next
-
-    ) => {
-
-        const allowed =
-
-            await CapabilityService.hasCapability(
-
-                req.user.role,
-
-                requiredCapability
-
-            );
+        console.log("Middleware Result:", allowed);
+        console.log("===========================================\n");
 
         if (!allowed) {
-
             return res.status(403).json({
-
-                success:false,
-
-                message:
-
-                "Access denied."
-
+                success: false,
+                message: "Access denied."
             });
-
         }
 
         next();
