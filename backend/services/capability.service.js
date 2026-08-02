@@ -4,12 +4,13 @@ class CapabilityService {
 
     static async hasCapability(role, capability) {
 
-        const capabilities = await CapabilityModel.findByRole(role);
+        console.log("Role received:", role);
+        console.log("Capability requested:", capability);
 
-        console.log("\n========== CAPABILITY SERVICE ==========");
-        console.log("Role:", role);
-        console.log("Required Capability:", capability);
-        console.log("Capabilities from Database:");
+        const capabilities =
+            await CapabilityModel.findByRole(role);
+
+        console.log("Capabilities from DB:");
         console.log(capabilities);
 
         const allowed = capabilities.some(
@@ -17,10 +18,8 @@ class CapabilityService {
         );
 
         console.log("Allowed:", allowed);
-        console.log("========================================\n");
 
         return allowed;
-
     }
 
 }
