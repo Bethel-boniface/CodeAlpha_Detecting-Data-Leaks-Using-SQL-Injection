@@ -1,13 +1,12 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "http://localhost:5000/api/v1",
+    baseURL: import.meta.env.VITE_API_URL || "/api/v1",
     headers: {
         "Content-Type": "application/json",
     },
 });
 
-// Same key used everywhere
 const TOKEN_KEY = "token";
 const USER_KEY = "user";
 
