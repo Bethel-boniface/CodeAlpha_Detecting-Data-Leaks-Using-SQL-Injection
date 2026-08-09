@@ -27,16 +27,15 @@ const COLORS = [
 ];
 
 function Analytics() {
-const [analytics, setAnalytics] = useState({
-attackTrend: [],
-severity: [],
-attackTypes: [],
-topIps: [],
-});
+    const [analytics, setAnalytics] = useState({
+        attackTrend: [],
+        severity: [],
+        attackTypes: [],
+        topIps: [],
+    });
 
-```
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
 useEffect(() => {
     let mounted = true;
@@ -480,8 +479,6 @@ return (
 
     </div>
 );
-```
-
 }
 
 export default Analytics;
