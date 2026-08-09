@@ -3,11 +3,9 @@ const pool = require("../config/db");
 
 class AdminModel {
 
-    /*
-    |--------------------------------------------------------------------------
-    | USERS
-    |--------------------------------------------------------------------------
-    */
+    // =========================================================
+    // USERS
+    // =========================================================
 
     static async getUsers() {
 
@@ -32,7 +30,8 @@ class AdminModel {
         const result = await pool.query(
             `
             UPDATE users
-            SET is_active = TRUE,
+            SET
+                is_active = TRUE,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = $1
             RETURNING
@@ -55,7 +54,8 @@ class AdminModel {
         const result = await pool.query(
             `
             UPDATE users
-            SET is_active = FALSE,
+            SET
+                is_active = FALSE,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = $1
             RETURNING
@@ -73,11 +73,9 @@ class AdminModel {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | SECURITY EVENTS
-    |--------------------------------------------------------------------------
-    */
+    // =========================================================
+    // SECURITY EVENTS
+    // =========================================================
 
     static async getSecurityEvents() {
 
@@ -102,11 +100,9 @@ class AdminModel {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | THREAT MONITOR
-    |--------------------------------------------------------------------------
-    */
+    // =========================================================
+    // THREAT MONITOR
+    // =========================================================
 
     static async getThreatMonitor() {
 
@@ -128,11 +124,9 @@ class AdminModel {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | DASHBOARD
-    |--------------------------------------------------------------------------
-    */
+    // =========================================================
+    // DASHBOARD
+    // =========================================================
 
     static async getDashboardStats() {
 
@@ -182,36 +176,20 @@ class AdminModel {
         ]);
 
         return {
-
-            totalUsers:
-                users.rows[0].total,
-
-            totalAttacks:
-                attacks.rows[0].total,
-
-            blockedAttacks:
-                blocked.rows[0].total,
-
-            criticalAttacks:
-                critical.rows[0].total,
-
-            attacksToday:
-                today.rows[0].total,
-
-            highRiskAttacks:
-                highRisk.rows[0].total,
-
+            totalUsers: users.rows[0].total,
+            totalAttacks: attacks.rows[0].total,
+            blockedAttacks: blocked.rows[0].total,
+            criticalAttacks: critical.rows[0].total,
+            attacksToday: today.rows[0].total,
+            highRiskAttacks: highRisk.rows[0].total,
             systemHealth: "Online"
-
         };
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | ATTACK CHART
-    |--------------------------------------------------------------------------
-    */
+    // =========================================================
+    // ATTACK CHART
+    // =========================================================
 
     static async getAttackChart() {
 
@@ -228,11 +206,9 @@ class AdminModel {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | ANALYTICS
-    |--------------------------------------------------------------------------
-    */
+    // =========================================================
+    // ANALYTICS
+    // =========================================================
 
     static async getAnalytics() {
 
@@ -244,10 +220,6 @@ class AdminModel {
             riskDistribution
         ] = await Promise.all([
 
-            /*
-            | Attack trend
-            */
-
             pool.query(`
                 SELECT
                     DATE(created_at) AS date,
@@ -256,11 +228,6 @@ class AdminModel {
                 GROUP BY DATE(created_at)
                 ORDER BY DATE(created_at)
             `),
-
-
-            /*
-            | Severity distribution
-            */
 
             pool.query(`
                 SELECT
@@ -271,15 +238,6 @@ class AdminModel {
                 ORDER BY count DESC
             `),
 
-
-            /*
-            | Attack categories
-            |
-            | The database has attack_type, not category.
-            | We expose attack_type AS category so the
-            | frontend can continue using "category".
-            */
-
             pool.query(`
                 SELECT
                     COALESCE(attack_type, 'Unknown') AS category,
@@ -288,11 +246,6 @@ class AdminModel {
                 GROUP BY attack_type
                 ORDER BY count DESC
             `),
-
-
-            /*
-            | Top attacking IP addresses
-            */
 
             pool.query(`
                 SELECT
@@ -303,14 +256,6 @@ class AdminModel {
                 ORDER BY count DESC
                 LIMIT 10
             `),
-
-
-            /*
-            | Risk distribution
-            |
-            | The database does not contain risk_score.
-            | Therefore risk is derived from severity.
-            */
 
             pool.query(`
                 SELECT
@@ -357,22 +302,11 @@ class AdminModel {
         ]);
 
         return {
-
-            attackTrend:
-                trend.rows,
-
-            severity:
-                severity.rows,
-
-            categories:
-                categories.rows,
-
-            topIps:
-                topIps.rows,
-
-            riskDistribution:
-                riskDistribution.rows
-
+            attackTrend: trend.rows,
+            severity: severity.rows,
+            categories: categories.rows,
+            topIps: topIps.rows,
+            riskDistribution: riskDistribution.rows
         };
     }
 
