@@ -60,7 +60,7 @@ function Users() {
 
             fetchUsers,
 
-            5000
+            180000
 
         );
 

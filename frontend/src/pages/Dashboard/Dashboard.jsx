@@ -55,7 +55,7 @@ function Dashboard() {
 
             loadDashboard,
 
-            5000
+            180000
 
         );
 

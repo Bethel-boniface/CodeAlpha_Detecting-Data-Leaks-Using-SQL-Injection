@@ -56,7 +56,7 @@ function ThreatMonitor() {
 
             fetchEvents,
 
-            5000
+            180000
 
         );
 

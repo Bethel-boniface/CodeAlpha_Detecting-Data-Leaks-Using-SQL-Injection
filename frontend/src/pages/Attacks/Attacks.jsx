@@ -29,7 +29,7 @@ function Attacks() {
         };
 
         fetchAttacks();
-        const interval = setInterval(fetchAttacks, 5000);
+        const interval = setInterval(fetchAttacks, 180000);
 
         return () => {
             mounted = false;

@@ -62,7 +62,7 @@ function RecentAttacks() {
 
             fetchAttacks,
 
-            5000
+            180000
 
         );
 

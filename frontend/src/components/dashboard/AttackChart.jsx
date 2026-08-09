@@ -76,7 +76,7 @@ function AttackChart() {
 
             loadChart,
 
-            5000
+            180000
 
         );
 
