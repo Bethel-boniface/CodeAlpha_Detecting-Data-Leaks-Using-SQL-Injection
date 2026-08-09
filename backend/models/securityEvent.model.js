@@ -14,9 +14,7 @@ class SecurityEventModel {
                 method,
                 payload,
                 attack_type,
-                category,
                 severity,
-                risk_score,
                 blocked
             )
             VALUES
@@ -27,9 +25,7 @@ class SecurityEventModel {
                 $4,
                 $5,
                 $6,
-                $7,
-                $8,
-                $9
+                $7
             )
             RETURNING *
             `,
@@ -46,11 +42,7 @@ class SecurityEventModel {
 
                 event.attackType,
 
-                event.category,
-
                 event.severity,
-
-                event.riskScore,
 
                 event.blocked ?? true
 

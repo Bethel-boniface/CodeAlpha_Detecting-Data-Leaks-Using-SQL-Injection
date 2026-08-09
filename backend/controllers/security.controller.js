@@ -1,4 +1,5 @@
 const { analyzePayload } = require("../services/securityAnalysis.service");
+const SecurityEvent = require("../models/securityEvent.model");
 
 // ==========================================
 // Analyze SQL Injection Payload
@@ -23,6 +24,19 @@ async function analyzeSecurityPayload(req, res) {
         }
 
         const analysis = analyzePayload(payload.trim());
+
+        if (analysis.blocked) {
+            await SecurityEvent.create({
+                ipAddress:
+                    req.ip || req.socket?.remoteAddress || "Unknown",
+                endpoint: req.originalUrl,
+                method: req.method,
+                payload: analysis.payload,
+                attackType: "SQL Injection",
+                severity: analysis.severity,
+                blocked: analysis.blocked
+            });
+        }
 
         return res.status(200).json({
 
