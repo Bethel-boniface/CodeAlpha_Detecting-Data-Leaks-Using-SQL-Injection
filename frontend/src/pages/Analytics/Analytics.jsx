@@ -39,11 +39,17 @@ const [loading, setLoading] = useState(true);
 const [error, setError] = useState("");
 
 useEffect(() => {
+    let mounted = true;
+
     const fetchAnalytics = async () => {
         try {
             const response = await getAnalytics();
 
-            const data = response.data?.analytics || {};
+            const data = response?.data?.analytics || {};
+
+            if (!mounted) {
+                return;
+            }
 
             setAnalytics({
                 attackTrend: Array.isArray(data.attackTrend)
@@ -63,41 +69,67 @@ useEffect(() => {
                     : [],
             });
         } catch (err) {
-            console.error("Analytics error:", err);
+            console.error("Failed to load analytics:", err);
+
+            if (!mounted) {
+                return;
+            }
 
             setError(
-                err.response?.data?.message ||
+                err?.response?.data?.message ||
                 "Unable to load analytics."
             );
         } finally {
-            setLoading(false);
+            if (mounted) {
+                setLoading(false);
+            }
         }
     };
 
     fetchAnalytics();
+
+    return () => {
+        mounted = false;
+    };
 }, []);
+
+const totalAttacks = analytics.attackTrend.reduce(
+    (total, item) => total + Number(item?.count || 0),
+    0
+);
 
 if (loading) {
     return (
-        <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
-            Loading analytics...
+        <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+            <div className="text-lg text-slate-300">
+                Loading analytics...
+            </div>
         </div>
     );
 }
 
 if (error) {
     return (
-        <div className="flex h-screen items-center justify-center bg-slate-950 text-red-400">
-            {error}
+        <div className="flex min-h-screen items-center justify-center bg-slate-950 p-8 text-white">
+            <div className="rounded-2xl border border-red-900 bg-slate-900 p-8 text-center">
+                <h1 className="text-2xl font-bold text-red-400">
+                    Analytics Error
+                </h1>
+
+                <p className="mt-3 text-slate-400">
+                    {error}
+                </p>
+            </div>
         </div>
     );
 }
 
 return (
-    <div className="min-h-screen bg-slate-950 p-8 text-white">
+    <div className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
 
         {/* HEADER */}
         <div className="mb-10">
+
             <h1 className="text-4xl font-bold">
                 Security Analytics
             </h1>
@@ -105,9 +137,55 @@ return (
             <p className="mt-2 text-slate-400">
                 Real-time visualization of SQLShield security intelligence.
             </p>
+
         </div>
 
-        {/* MAIN ANALYTICS */}
+
+        {/* SUMMARY CARDS */}
+        <div className="mb-8 grid gap-6 md:grid-cols-3">
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+
+                <p className="text-sm text-slate-400">
+                    Total Attacks
+                </p>
+
+                <p className="mt-2 text-4xl font-bold text-blue-400">
+                    {totalAttacks}
+                </p>
+
+            </div>
+
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+
+                <p className="text-sm text-slate-400">
+                    Severity Levels
+                </p>
+
+                <p className="mt-2 text-4xl font-bold text-red-400">
+                    {analytics.severity.length}
+                </p>
+
+            </div>
+
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+
+                <p className="text-sm text-slate-400">
+                    Attack Types
+                </p>
+
+                <p className="mt-2 text-4xl font-bold text-yellow-400">
+                    {analytics.attackTypes.length}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {/* ANALYTICS GRID */}
         <div className="grid gap-8 xl:grid-cols-2">
 
             {/* ATTACK TREND */}
@@ -127,15 +205,27 @@ return (
 
                     ) : (
 
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer
+                            width="100%"
+                            height="100%"
+                        >
 
-                            <LineChart data={analytics.attackTrend}>
+                            <LineChart
+                                data={analytics.attackTrend}
+                            >
 
-                                <CartesianGrid stroke="#334155" />
+                                <CartesianGrid
+                                    stroke="#334155"
+                                />
 
-                                <XAxis dataKey="date" />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#94A3B8"
+                                />
 
-                                <YAxis />
+                                <YAxis
+                                    stroke="#94A3B8"
+                                />
 
                                 <Tooltip />
 
@@ -144,6 +234,7 @@ return (
                                     dataKey="count"
                                     stroke="#3B82F6"
                                     strokeWidth={3}
+                                    dot={false}
                                 />
 
                             </LineChart>
@@ -157,7 +248,7 @@ return (
             </div>
 
 
-            {/* SEVERITY */}
+            {/* SEVERITY DISTRIBUTION */}
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
 
                 <h2 className="mb-6 text-2xl font-bold">
@@ -174,7 +265,10 @@ return (
 
                     ) : (
 
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer
+                            width="100%"
+                            height="100%"
+                        >
 
                             <PieChart>
 
@@ -189,10 +283,11 @@ return (
                                     {analytics.severity.map(
                                         (entry, index) => (
                                             <Cell
-                                                key={`${entry.severity}-${index}`}
+                                                key={index}
                                                 fill={
                                                     COLORS[
-                                                        index % COLORS.length
+                                                        index %
+                                                        COLORS.length
                                                     ]
                                                 }
                                             />
@@ -231,21 +326,34 @@ return (
 
                     ) : (
 
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer
+                            width="100%"
+                            height="100%"
+                        >
 
-                            <BarChart data={analytics.attackTypes}>
+                            <BarChart
+                                data={analytics.attackTypes}
+                            >
 
-                                <CartesianGrid stroke="#334155" />
+                                <CartesianGrid
+                                    stroke="#334155"
+                                />
 
-                                <XAxis dataKey="attack_type" />
+                                <XAxis
+                                    dataKey="attack_type"
+                                    stroke="#94A3B8"
+                                />
 
-                                <YAxis />
+                                <YAxis
+                                    stroke="#94A3B8"
+                                />
 
                                 <Tooltip />
 
                                 <Bar
                                     dataKey="count"
                                     fill="#EF4444"
+                                    radius={[6, 6, 0, 0]}
                                 />
 
                             </BarChart>
@@ -259,7 +367,7 @@ return (
             </div>
 
 
-            {/* TOP IPS */}
+            {/* TOP IP ADDRESSES */}
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
 
                 <h2 className="mb-6 text-2xl font-bold">
@@ -276,24 +384,26 @@ return (
 
                     <div className="space-y-4">
 
-                        {analytics.topIps.map((ip) => (
+                        {analytics.topIps.map(
+                            (ip, index) => (
 
-                            <div
-                                key={ip.ip_address}
-                                className="flex items-center justify-between rounded-xl bg-slate-800 p-4"
-                            >
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between rounded-xl bg-slate-800 p-4"
+                                >
 
-                                <span className="font-mono">
-                                    {ip.ip_address}
-                                </span>
+                                    <span className="font-mono text-slate-200">
+                                        {ip?.ip_address || "Unknown"}
+                                    </span>
 
-                                <span className="rounded-full bg-red-500 px-3 py-1 text-sm">
-                                    {ip.count} attacks
-                                </span>
+                                    <span className="rounded-full bg-red-500 px-3 py-1 text-sm font-semibold">
+                                        {Number(ip?.count || 0)} attacks
+                                    </span>
 
-                            </div>
+                                </div>
 
-                        ))}
+                            )
+                        )}
 
                     </div>
 
@@ -304,48 +414,65 @@ return (
         </div>
 
 
-        {/* ANALYTICS SUMMARY */}
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        {/* RISK / SECURITY SUMMARY */}
+        <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h2 className="mb-6 text-2xl font-bold">
+                Security Intelligence Summary
+            </h2>
 
-                <p className="text-sm text-slate-400">
-                    Total Attack Records
-                </p>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-                <p className="mt-2 text-4xl font-bold text-blue-400">
-                    {analytics.attackTrend.reduce(
-                        (total, item) =>
-                            total + Number(item.count || 0),
-                        0
-                    )}
-                </p>
+                <div className="rounded-xl bg-slate-800 p-5">
 
-            </div>
+                    <p className="text-sm text-slate-400">
+                        Recorded Attack Days
+                    </p>
 
+                    <p className="mt-2 text-3xl font-bold text-blue-400">
+                        {analytics.attackTrend.length}
+                    </p>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
-                <p className="text-sm text-slate-400">
-                    Severity Categories
-                </p>
-
-                <p className="mt-2 text-4xl font-bold text-red-400">
-                    {analytics.severity.length}
-                </p>
-
-            </div>
+                </div>
 
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+                <div className="rounded-xl bg-slate-800 p-5">
 
-                <p className="text-sm text-slate-400">
-                    Attack Types
-                </p>
+                    <p className="text-sm text-slate-400">
+                        Severity Categories
+                    </p>
 
-                <p className="mt-2 text-4xl font-bold text-yellow-400">
-                    {analytics.attackTypes.length}
-                </p>
+                    <p className="mt-2 text-3xl font-bold text-red-400">
+                        {analytics.severity.length}
+                    </p>
+
+                </div>
+
+
+                <div className="rounded-xl bg-slate-800 p-5">
+
+                    <p className="text-sm text-slate-400">
+                        Attack Categories
+                    </p>
+
+                    <p className="mt-2 text-3xl font-bold text-yellow-400">
+                        {analytics.attackTypes.length}
+                    </p>
+
+                </div>
+
+
+                <div className="rounded-xl bg-slate-800 p-5">
+
+                    <p className="text-sm text-slate-400">
+                        Unique Attacking IPs
+                    </p>
+
+                    <p className="mt-2 text-3xl font-bold text-purple-400">
+                        {analytics.topIps.length}
+                    </p>
+
+                </div>
 
             </div>
 
