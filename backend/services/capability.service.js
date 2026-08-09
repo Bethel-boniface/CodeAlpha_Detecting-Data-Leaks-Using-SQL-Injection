@@ -4,22 +4,65 @@ class CapabilityService {
 
     static async hasCapability(role, capability) {
 
-        console.log("Role received:", role);
-        console.log("Capability requested:", capability);
+        console.log("\n========================================");
+        console.log("CAPABILITY SERVICE");
+        console.log("========================================");
+        console.log("Role received:", JSON.stringify(role));
+        console.log("Capability requested:", JSON.stringify(capability));
 
-        const capabilities =
-            await CapabilityModel.findByRole(role);
+        try {
 
-        console.log("Capabilities from DB:");
-        console.log(capabilities);
+            const capabilities =
+                await CapabilityModel.findByRole(role);
 
-        const allowed = capabilities.some(
-            c => c.capability_code === capability
-        );
+            console.log("Database capabilities:");
 
-        console.log("Allowed:", allowed);
+            console.log(
+                JSON.stringify(
+                    capabilities,
+                    null,
+                    2
+                )
+            );
 
-        return allowed;
+            const allowed = capabilities.some(
+                c =>
+                    String(c.capability_code).trim() ===
+                    String(capability).trim()
+            );
+
+            console.log(
+                "Capability comparison:"
+            );
+
+            console.log(
+                "Requested:",
+                JSON.stringify(capability)
+            );
+
+            console.log(
+                "Allowed:",
+                allowed
+            );
+
+            console.log(
+                "========================================\n"
+            );
+
+            return allowed;
+
+        } catch (error) {
+
+            console.error(
+                "CAPABILITY SERVICE ERROR:"
+            );
+
+            console.error(error);
+
+            throw error;
+
+        }
+
     }
 
 }
