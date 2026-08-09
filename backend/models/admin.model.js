@@ -1,316 +1,279 @@
-```javascript
 const pool = require("../config/db");
 
 class AdminModel {
 
-    // =========================================================
-    // USERS
-    // =========================================================
+// =========================================================
+// USERS
+// =========================================================
 
-    static async getUsers() {
+static async getUsers() {
 
-        const result = await pool.query(`
-            SELECT
-                id,
-                username,
-                email,
-                role,
-                is_active,
-                created_at
-            FROM users
-            ORDER BY created_at DESC
-        `);
+    const result = await pool.query(`
+        SELECT
+            id,
+            username,
+            email,
+            role,
+            is_active,
+            created_at
+        FROM users
+        ORDER BY created_at DESC
+    `);
 
-        return result.rows;
-    }
-
-
-    static async activateUser(userId) {
-
-        const result = await pool.query(
-            `
-            UPDATE users
-            SET
-                is_active = TRUE,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $1
-            RETURNING
-                id,
-                username,
-                email,
-                role,
-                is_active,
-                created_at
-            `,
-            [userId]
-        );
-
-        return result.rows[0];
-    }
+    return result.rows;
+}
 
 
-    static async deactivateUser(userId) {
+static async activateUser(userId) {
 
-        const result = await pool.query(
-            `
-            UPDATE users
-            SET
-                is_active = FALSE,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $1
-            RETURNING
-                id,
-                username,
-                email,
-                role,
-                is_active,
-                created_at
-            `,
-            [userId]
-        );
+    const result = await pool.query(
+        `
+        UPDATE users
+        SET
+            is_active = TRUE,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING
+            id,
+            username,
+            email,
+            role,
+            is_active,
+            created_at
+        `,
+        [userId]
+    );
 
-        return result.rows[0];
-    }
-
-
-    // =========================================================
-    // SECURITY EVENTS
-    // =========================================================
-
-    static async getSecurityEvents() {
-
-        const result = await pool.query(`
-            SELECT
-                id,
-                ip_address,
-                endpoint,
-                method,
-                payload,
-                attack_type,
-                attack_type AS category,
-                severity,
-                blocked,
-                created_at
-            FROM security_events
-            ORDER BY created_at DESC
-            LIMIT 100
-        `);
-
-        return result.rows;
-    }
+    return result.rows[0];
+}
 
 
-    // =========================================================
-    // THREAT MONITOR
-    // =========================================================
+static async deactivateUser(userId) {
 
-    static async getThreatMonitor() {
+    const result = await pool.query(
+        `
+        UPDATE users
+        SET
+            is_active = FALSE,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING
+            id,
+            username,
+            email,
+            role,
+            is_active,
+            created_at
+        `,
+        [userId]
+    );
 
-        const result = await pool.query(`
-            SELECT
-                id,
-                ip_address,
-                endpoint,
-                attack_type,
-                severity,
-                blocked,
-                created_at
-            FROM security_events
-            ORDER BY created_at DESC
-            LIMIT 250
-        `);
-
-        return result.rows;
-    }
+    return result.rows[0];
+}
 
 
-    // =========================================================
-    // DASHBOARD
-    // =========================================================
+// =========================================================
+// SECURITY EVENTS
+// =========================================================
 
-    static async getDashboardStats() {
+static async getSecurityEvents() {
 
-        const [
-            users,
-            attacks,
+    const result = await pool.query(`
+        SELECT
+            id,
+            ip_address,
+            endpoint,
+            method,
+            payload,
+            attack_type,
+            severity,
             blocked,
-            critical,
-            today,
-            highRisk
-        ] = await Promise.all([
+            created_at
+        FROM security_events
+        ORDER BY created_at DESC
+        LIMIT 100
+    `);
 
-            pool.query(`
-                SELECT COUNT(*)::int AS total
-                FROM users
-            `),
-
-            pool.query(`
-                SELECT COUNT(*)::int AS total
-                FROM security_events
-            `),
-
-            pool.query(`
-                SELECT COUNT(*)::int AS total
-                FROM security_events
-                WHERE blocked = TRUE
-            `),
-
-            pool.query(`
-                SELECT COUNT(*)::int AS total
-                FROM security_events
-                WHERE UPPER(severity) = 'CRITICAL'
-            `),
-
-            pool.query(`
-                SELECT COUNT(*)::int AS total
-                FROM security_events
-                WHERE DATE(created_at) = CURRENT_DATE
-            `),
-
-            pool.query(`
-                SELECT COUNT(*)::int AS total
-                FROM security_events
-                WHERE UPPER(severity) IN ('HIGH', 'CRITICAL')
-            `)
-
-        ]);
-
-        return {
-            totalUsers: users.rows[0].total,
-            totalAttacks: attacks.rows[0].total,
-            blockedAttacks: blocked.rows[0].total,
-            criticalAttacks: critical.rows[0].total,
-            attacksToday: today.rows[0].total,
-            highRiskAttacks: highRisk.rows[0].total,
-            systemHealth: "Online"
-        };
-    }
+    return result.rows;
+}
 
 
-    // =========================================================
-    // ATTACK CHART
-    // =========================================================
+// =========================================================
+// THREAT MONITOR
+// =========================================================
 
-    static async getAttackChart() {
+static async getThreatMonitor() {
 
-        const result = await pool.query(`
+    const result = await pool.query(`
+        SELECT
+            id,
+            ip_address,
+            endpoint,
+            method,
+            attack_type,
+            severity,
+            blocked,
+            created_at
+        FROM security_events
+        ORDER BY created_at DESC
+        LIMIT 250
+    `);
+
+    return result.rows;
+}
+
+
+// =========================================================
+// DASHBOARD
+// =========================================================
+
+static async getDashboardStats() {
+
+    const [
+        users,
+        attacks,
+        blocked,
+        critical,
+        today
+    ] = await Promise.all([
+
+        pool.query(`
+            SELECT COUNT(*)::int AS total
+            FROM users
+        `),
+
+        pool.query(`
+            SELECT COUNT(*)::int AS total
+            FROM security_events
+        `),
+
+        pool.query(`
+            SELECT COUNT(*)::int AS total
+            FROM security_events
+            WHERE blocked = TRUE
+        `),
+
+        pool.query(`
+            SELECT COUNT(*)::int AS total
+            FROM security_events
+            WHERE UPPER(severity) = 'CRITICAL'
+        `),
+
+        pool.query(`
+            SELECT COUNT(*)::int AS total
+            FROM security_events
+            WHERE DATE(created_at) = CURRENT_DATE
+        `)
+
+    ]);
+
+    return {
+
+        totalUsers: users.rows[0].total,
+
+        totalAttacks: attacks.rows[0].total,
+
+        blockedAttacks: blocked.rows[0].total,
+
+        criticalAttacks: critical.rows[0].total,
+
+        attacksToday: today.rows[0].total,
+
+        systemHealth: "Online"
+
+    };
+}
+
+
+// =========================================================
+// ATTACK CHART
+// =========================================================
+
+static async getAttackChart() {
+
+    const result = await pool.query(`
+        SELECT
+            DATE(created_at) AS date,
+            COUNT(*)::int AS attacks
+        FROM security_events
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at)
+    `);
+
+    return result.rows;
+}
+
+
+// =========================================================
+// ANALYTICS
+// =========================================================
+
+static async getAnalytics() {
+
+    const [
+        trend,
+        severity,
+        attackTypes,
+        topIps
+    ] = await Promise.all([
+
+        // Attack trend
+        pool.query(`
             SELECT
                 DATE(created_at) AS date,
-                COUNT(*)::int AS attacks
+                COUNT(*)::int AS count
             FROM security_events
             GROUP BY DATE(created_at)
             ORDER BY DATE(created_at)
-        `);
+        `),
 
-        return result.rows;
-    }
+        // Severity distribution
+        pool.query(`
+            SELECT
+                severity,
+                COUNT(*)::int AS count
+            FROM security_events
+            GROUP BY severity
+            ORDER BY count DESC
+        `),
 
+        // Attack type distribution
+        pool.query(`
+            SELECT
+                attack_type,
+                COUNT(*)::int AS count
+            FROM security_events
+            GROUP BY attack_type
+            ORDER BY count DESC
+        `),
 
-    // =========================================================
-    // ANALYTICS
-    // =========================================================
+        // Top attacking IPs
+        pool.query(`
+            SELECT
+                ip_address,
+                COUNT(*)::int AS count
+            FROM security_events
+            GROUP BY ip_address
+            ORDER BY count DESC
+            LIMIT 10
+        `)
 
-    static async getAnalytics() {
+    ]);
 
-        const [
-            trend,
-            severity,
-            categories,
-            topIps,
-            riskDistribution
-        ] = await Promise.all([
+    return {
 
-            pool.query(`
-                SELECT
-                    DATE(created_at) AS date,
-                    COUNT(*)::int AS count
-                FROM security_events
-                GROUP BY DATE(created_at)
-                ORDER BY DATE(created_at)
-            `),
+        attackTrend: trend.rows,
 
-            pool.query(`
-                SELECT
-                    COALESCE(severity, 'UNKNOWN') AS severity,
-                    COUNT(*)::int AS count
-                FROM security_events
-                GROUP BY severity
-                ORDER BY count DESC
-            `),
+        severity: severity.rows,
 
-            pool.query(`
-                SELECT
-                    COALESCE(attack_type, 'Unknown') AS category,
-                    COUNT(*)::int AS count
-                FROM security_events
-                GROUP BY attack_type
-                ORDER BY count DESC
-            `),
+        attackTypes: attackTypes.rows,
 
-            pool.query(`
-                SELECT
-                    COALESCE(ip_address, 'Unknown') AS ip_address,
-                    COUNT(*)::int AS count
-                FROM security_events
-                GROUP BY ip_address
-                ORDER BY count DESC
-                LIMIT 10
-            `),
+        topIps: topIps.rows
 
-            pool.query(`
-                SELECT
-                    CASE
-                        WHEN UPPER(severity) = 'CRITICAL'
-                            THEN 'Critical'
-
-                        WHEN UPPER(severity) = 'HIGH'
-                            THEN 'High'
-
-                        WHEN UPPER(severity) = 'MEDIUM'
-                            THEN 'Medium'
-
-                        WHEN UPPER(severity) = 'LOW'
-                            THEN 'Low'
-
-                        ELSE 'Unknown'
-                    END AS risk_level,
-
-                    COUNT(*)::int AS count
-
-                FROM security_events
-
-                GROUP BY
-                    CASE
-                        WHEN UPPER(severity) = 'CRITICAL'
-                            THEN 'Critical'
-
-                        WHEN UPPER(severity) = 'HIGH'
-                            THEN 'High'
-
-                        WHEN UPPER(severity) = 'MEDIUM'
-                            THEN 'Medium'
-
-                        WHEN UPPER(severity) = 'LOW'
-                            THEN 'Low'
-
-                        ELSE 'Unknown'
-                    END
-
-                ORDER BY count DESC
-            `)
-
-        ]);
-
-        return {
-            attackTrend: trend.rows,
-            severity: severity.rows,
-            categories: categories.rows,
-            topIps: topIps.rows,
-            riskDistribution: riskDistribution.rows
-        };
-    }
+    };
+}
 
 }
 
 module.exports = AdminModel;
-```
+
