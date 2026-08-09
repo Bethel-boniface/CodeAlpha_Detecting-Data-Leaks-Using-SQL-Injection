@@ -81,7 +81,7 @@ function Attacks() {
                                             {attack.payload}
                                         </td>
                                         <td className="p-4 text-slate-300">
-                                            {attack.risk_score ?? attack.risk || "N/A"}
+                                            {(attack.risk_score ?? attack.risk) || "N/A"}
                                         </td>
                                         <td className={`p-4 ${attack.blocked ? "text-green-400" : "text-red-400"}`}>
                                             {attack.blocked ? "Blocked" : "Allowed"}
