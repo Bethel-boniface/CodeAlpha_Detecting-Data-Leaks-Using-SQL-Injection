@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { FaShieldAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 function Navbar() {
     return (
@@ -54,17 +55,19 @@ function Navbar() {
                 {/* Buttons */}
                 <div className="hidden md:flex gap-3">
 
-                    <button
+                    <Link
+                        to="/login"
                         className="px-5 py-2 rounded-lg border border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white transition"
                     >
                         Login
-                    </button>
+                    </Link>
 
-                    <button
+                    <Link
+                        to="/register"
                         className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition"
                     >
                         Register
-                    </button>
+                    </Link>
 
                 </div>
 
